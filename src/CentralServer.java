@@ -55,4 +55,7 @@ public class CentralServer implements Runnable
 		}
 
 	}
+	
+	//TO DO: implement changes to run method from server to allow central server to mediate between many different servers and clients
+	public void run(){}
 }
