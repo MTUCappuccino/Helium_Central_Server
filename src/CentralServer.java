@@ -3,6 +3,8 @@ import java.net.Socket;
 import java.util.Scanner;
 import java.io.IOException;
 
+import java.util.ArrayList;
+
 /*
  * Central Server mediates between individual servers and clients 
  * @author Doogie Warner
@@ -22,6 +24,10 @@ public class CentralServer implements Runnable
 	private String password = "";
     private String hexColor = "000000";
 	private String customBack = "NULL";
+	
+	private ServerSpec serverSpecific;  //server specific object
+	
+	private ArrayList<String> pubServers;  //list of public servers
 	
 	private boolean isPublic; //keeps track of which server wants to be public or private
 	private boolean isClient; //keeps track if the communication is with client or not
