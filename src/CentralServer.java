@@ -2,8 +2,16 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
 import java.io.IOException;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.util.ArrayList;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.Scanner;
+import java.util.HashMap;
+import java.lang.String;
 
 /*
  * Central Server mediates between individual servers and clients 
@@ -28,6 +36,7 @@ public class CentralServer implements Runnable
 	private ServerSpec serverSpecific;  //server specific object
 	
 	private ArrayList<String> pubServers;  //list of public servers
+	private HashMap<String, ServerSpec> hashRegister;  //hashmap to a server, input: code, output: server
 	
 	private boolean isPublic; //keeps track of which server wants to be public or private
 	private boolean isClient; //keeps track if the communication is with client or not
@@ -61,6 +70,39 @@ public class CentralServer implements Runnable
 		}
 
 	}
+	
+	
+	
+	private void registerServer(Socket s, ServerSpec spec) throws IOException
+	{
+        BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
+	    String code = input.readLine();
+	    hashRegister.put(code, spec); 
+	}
+	
+	
+	//reading client code and sending info back
+	private void incomingClient(Socket s) throws IOException 
+	{
+	    BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
+	    String code = input.readLine();
+	    
+	    
+	    //write back to the client
+	    String D = hashRegister.get(code).getName();
+	    String E = hashRegister.get(code).getURL();
+	    String F = hashRegister.get(code).getPort();
+	    
+	    int A = D.length();
+	    int B = E.length();
+	    int C = F.length();
+	    
+	    String outputString = ("" + A) + ("" + B) + ("" + C) + D + E + F;
+	    
+	    BufferedWriter output = new BufferedWriter(new OutputStreamWriter (s.getOutputStream()));
+	    output.write(outputString, 0, outputString.length());
+	}
+	
 	
 	//TO DO: implement changes to run method from server to allow central server to mediate between many different servers and clients
 	public void run(){}

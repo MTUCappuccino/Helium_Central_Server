@@ -23,6 +23,11 @@ public class ServerSpec
 		name = n;
 	}
 	
+	public String getName()
+	{
+		return name;
+	}
+	
 	public void setpURL(String p)
 	{
 		pictureURL = p;
@@ -33,9 +38,19 @@ public class ServerSpec
 		urlAddress = u;
 	}
 	
+	public String getURL()
+	{
+		return urlAddress;
+	}
+	
 	public void setPort(String p)
 	{
 		port = p;
+	}
+	
+	public String getPort()
+	{
+		return port;
 	}
 	
 	public void setReqUser(boolean ru)
