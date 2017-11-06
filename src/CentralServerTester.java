@@ -2,8 +2,8 @@
 public class CentralServerTester {
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
+            CentralServer central = new CentralServer(13245);
+            central.openServer();
 	}
 
 }
