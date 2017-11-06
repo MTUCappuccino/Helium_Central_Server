@@ -4,6 +4,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 
+/*
+ * The specifications for each server, holds data such as server name, URL, port and code needed to access
+ * clients need certain server specs in order to access their desired server
+ */
+
 public class ServerSpec 
 {	
 	public ServerSpec(String n, String purl, String u, String p, boolean ru, boolean rp, String c, boolean i)
@@ -51,6 +56,11 @@ public class ServerSpec
 	public String getPort()
 	{
 		return port;
+	}
+	
+	public String getCode()
+	{
+		return code;
 	}
 	
 	public void setReqUser(boolean ru)
