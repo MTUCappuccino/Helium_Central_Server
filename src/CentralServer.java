@@ -25,10 +25,10 @@ public class CentralServer implements Runnable
 
     // Port to run on
     private int port;
-    private int defaultPort = 9090;
+    private int defaultPort = 9090; //default value for the port
     private boolean autoPort = false;
     private ServerSocket listener;
-    private String serverName = "Central";
+    private String serverName = "Central";  //name of the server
 	private String password = "";
     private String hexColor = "000000";
 	private String customBack = "NULL";
@@ -41,11 +41,13 @@ public class CentralServer implements Runnable
 	private boolean isPublic; //keeps track of which server wants to be public or private
 	private boolean isClient; //keeps track if the communication is with client or not
 	
+	
 	CentralServer(int portNum) 
 	{
 		setPort(portNum);
 	}
 
+	//opens the server
 	public boolean openServer() {
 		(new Thread(new CentralServer(port))).start();
 		return true;
@@ -59,6 +61,7 @@ public class CentralServer implements Runnable
 		return port;
 	}
 	
+	//close the server to prevent further access
 	public boolean closeServer() {
 		try {
 			listener.close();
@@ -72,7 +75,7 @@ public class CentralServer implements Runnable
 	}
 	
 	
-	
+	//registers the server with the central server, stores a code that the client will match for access to the individual server
 	private void registerServer(Socket s, ServerSpec spec) throws IOException
 	{
         BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -81,7 +84,7 @@ public class CentralServer implements Runnable
 	}
 	
 	
-	//reading client code and sending info back
+	//reads the client code and connects the client with the server specified by the by shareing the server information with the client
 	private void incomingClient(Socket s) throws IOException 
 	{
 	    BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
