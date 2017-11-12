@@ -48,8 +48,8 @@ public class CentralServer implements Runnable {
         hashRegister = new HashMap<>();
 
         // Hardcoded, for now:
-        hashRegister.put("ABCDE", new ServerSpec("Test Server 1", null, "localhost", "9090", true, true, "#FF00FF", true));
-        hashRegister.put("A1BBB", new ServerSpec("Test Server 2", null, "141.219.201.62", "6060", true, true, "#FF0000", true));
+        hashRegister.put("ABCDE", new ServerSpec("Test Server 1", null, "localhost", "9090", true, true, true));
+        hashRegister.put("A1BBB", new ServerSpec("Test Server 2", null, "141.219.201.62", "6060", true, true, true));
     }
 
     //opens the server
@@ -80,10 +80,11 @@ public class CentralServer implements Runnable {
     }
 
     //registers the server with the central server, stores a code that the client will match for access to the individual server
-    private void registerServer(Socket s, ServerSpec spec) throws IOException {
+    private String registerServer(Socket s, ServerSpec spec) throws IOException {
         BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
         String code = input.readLine();
         hashRegister.put(code, spec);
+        return code;
     }
 
     //reads the client code and connects the client with the server specified by the by shareing the server information with the client
@@ -96,7 +97,7 @@ public class CentralServer implements Runnable {
         //write back to the client
         String D = hashRegister.get(code).getName();
         String E = hashRegister.get(code).getURL();
-        String F = hashRegister.get(code).getPort();
+        String F = hashRegister.get(code).getPort(); 
 
         int A = D.length();
         int B = E.length();
@@ -108,6 +109,38 @@ public class CentralServer implements Runnable {
         output.write(outputString + "\n");
         output.flush();
     }
+    
+    private void incomingServer(Socket s) throws IOException 
+    {
+        BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
+        String serverInfo = input.readLine();
+        
+        System.out.println("Read: " + serverInfo);
+
+        //processes the information the server has sent
+        int A = (int) serverInfo.charAt(0);
+        int B = (int) serverInfo.charAt(1);
+        int C = (int) serverInfo.charAt(2);
+        int D = (int) serverInfo.charAt(3);
+        boolean I = ((int) serverInfo.charAt(4) == 1); 
+        boolean II = ((int) serverInfo.charAt(5) == 1); 
+        boolean III = ((int) serverInfo.charAt(6) == 1);
+        String E = serverInfo.substring(7, 7+A);
+        String F = serverInfo.substring(7+A, 7+A+B);
+        String G = serverInfo.substring(7+A+B, 7+A+C);
+        String H = serverInfo.substring(7+A+B+C, 7+A+B+C+D);
+        
+        //stores the new specs in order to register
+        ServerSpec newServer = new ServerSpec(E, F, G, H, I, II, III);
+        
+        //registers and receives the code to output
+        String code = registerServer(s, newServer);
+
+        BufferedWriter output = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+        output.write(code + "\n");
+        output.flush();
+    }
+    
 
     //TO DO: implement changes to run method from server to allow central server to mediate between many different servers and clients
     public void run() {
@@ -119,7 +152,10 @@ public class CentralServer implements Runnable {
         while (true) {
             try {
                 Socket s = listener.accept();
-                incomingClient(s);
+                if(isClient)
+                   incomingClient(s);
+                else
+                   incomingServer(s);
                 s.close();
             } catch (IOException ex) {
                 Logger.getLogger(CentralServer.class.getName()).log(Level.SEVERE, null, ex);

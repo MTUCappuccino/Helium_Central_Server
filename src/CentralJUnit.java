@@ -27,7 +27,7 @@ public class CentralJUnit
 	@Before
 	public void setUp() throws Exception 
 	{
-		s = new ServerSpec("ServerName","picURL","theURL","port1",true,true,"code1",true);
+		s = new ServerSpec("ServerName","picURL","theURL","port1",true,true,true);
 		System.out.println("\nstart method\n");
 	}
 

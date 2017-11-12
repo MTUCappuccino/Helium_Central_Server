@@ -11,7 +11,7 @@ import java.net.URL;
 
 public class ServerSpec 
 {	
-	public ServerSpec(String n, String purl, String u, String p, boolean ru, boolean rp, String c, boolean i)
+	public ServerSpec(String n, String purl, String u, String p, boolean ru, boolean rp, boolean i)
     {
 		setName(n);
 		setpURL(purl);
@@ -19,7 +19,6 @@ public class ServerSpec
 		setPort(p);
 		setReqUser(ru);
 		setReqPass(rp);
-		setCode(c);
 		setisPub(i);
     }
 		
@@ -36,6 +35,11 @@ public class ServerSpec
 	public void setpURL(String p)
 	{
 		pictureURL = p;
+	}
+	
+	public String getpURL()
+	{
+		return pictureURL;
 	}
 	
 	public void seturlAddress(String u)
@@ -68,9 +72,19 @@ public class ServerSpec
 		reqUsername = ru;
 	}
 	
+	public boolean getReqUser()
+	{
+		return reqUsername;
+	}
+	
 	public void setReqPass(boolean rp)
 	{
 		reqPassword = rp;
+	}
+	
+	public boolean getReqPass()
+	{
+		return reqPassword;
 	}
 	
 	public void setCode(String c)
@@ -81,6 +95,11 @@ public class ServerSpec
 	public void setisPub(boolean i)
 	{
 		isPublic = i;
+	}
+	
+	public boolean getisPub()
+	{
+		return isPublic;
 	}
 	
 	public void storePictureURL(String picture, String dest) throws IOException
