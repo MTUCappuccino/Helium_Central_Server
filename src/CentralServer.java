@@ -42,7 +42,9 @@ public class CentralServer implements Runnable {
 
     private boolean isPublic; //keeps track of which server wants to be public or private
     private boolean isClient; //keeps track if the communication is with client or not
-
+    private String pubMessage = "request_public_servers";	
+    private ArrayList<String> pubCodes;
+    
     CentralServer(int portNum) {
 
         hashRegister = new HashMap<>();
@@ -110,6 +112,44 @@ public class CentralServer implements Runnable {
         output.flush();
     }
     
+    private void requestPubServers(Socket s) throws IOException
+    {
+    	String outputString= "";
+    	int A;
+    	int B;
+    	int C;
+    	int D;
+    	int userReq=0;
+    	int passReq=0;
+    	int isPub=1;
+    	String E;
+    	String F;
+    	String G;
+    	String H;
+    	for(int i =0; i < pubCodes.size(); i++)
+    	{
+    		E = hashRegister.get(pubCodes.get(i)).getName();
+    		F = hashRegister.get(pubCodes.get(i)).getpURL();
+            G = hashRegister.get(pubCodes.get(i)).getURL();
+            H = hashRegister.get(pubCodes.get(i)).getPort();
+            if(hashRegister.get(pubCodes.get(i)).getReqUser())
+            	userReq=1;
+            if(hashRegister.get(pubCodes.get(i)).getReqPass())
+            	passReq=1;
+            A = E.length();
+            B = F.length();
+            C = G.length();
+            D = H.length();
+  
+    		outputString = outputString + pubCodes.size() + A + B + C + D + userReq + passReq + isPub + E + F + G + F;
+    	}
+    	
+    	BufferedWriter output = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+        output.write(outputString + "\n");
+        output.flush();
+    }
+    
+    
     private void incomingServer(Socket s) throws IOException 
     {
         BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -122,20 +162,23 @@ public class CentralServer implements Runnable {
         int B = (int) serverInfo.charAt(1);
         int C = (int) serverInfo.charAt(2);
         int D = (int) serverInfo.charAt(3);
-        boolean I = ((int) serverInfo.charAt(4) == 1); 
-        boolean II = ((int) serverInfo.charAt(5) == 1); 
-        boolean III = ((int) serverInfo.charAt(6) == 1);
+        boolean userReq = ((int) serverInfo.charAt(4) == 1); 
+        boolean passReq = ((int) serverInfo.charAt(5) == 1); 
+        boolean isPub = ((int) serverInfo.charAt(6) == 1);
         String E = serverInfo.substring(7, 7+A);
         String F = serverInfo.substring(7+A, 7+A+B);
         String G = serverInfo.substring(7+A+B, 7+A+C);
         String H = serverInfo.substring(7+A+B+C, 7+A+B+C+D);
         
         //stores the new specs in order to register
-        ServerSpec newServer = new ServerSpec(E, F, G, H, I, II, III);
+        ServerSpec newServer = new ServerSpec(E, F, G, H, userReq, passReq, isPub);
         
         //registers and receives the code to output
         String code = registerServer(s, newServer);
 
+        if(isPub)
+          pubCodes.add(code);
+        
         BufferedWriter output = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
         output.write(code + "\n");
         output.flush();
@@ -152,6 +195,12 @@ public class CentralServer implements Runnable {
         while (true) {
             try {
                 Socket s = listener.accept();
+                
+                BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                String message = input.readLine();
+                if(message.equals(pubMessage))
+                	requestPubServers(s);
+                
                 if(isClient)
                    incomingClient(s);
                 else
