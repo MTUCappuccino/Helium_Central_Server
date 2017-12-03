@@ -1,18 +1,14 @@
 
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Scanner;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Scanner;
 import java.util.HashMap;
-import java.lang.String;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,34 +17,22 @@ import java.util.logging.Logger;
  * @author Doogie Warner
  */
 public class CentralServer implements Runnable {
-    // Tracks if server open
 
-    private boolean open = true;
-
-    // Port to run on
     private int port;
-    private int defaultPort = 9090; //default value for the port
-    private boolean autoPort = false;
     private ServerSocket listener;
-    private String serverName = "Central";  //name of the server
-    private String password = "";
-    private String hexColor = "000000";
-    private String customBack = "NULL";
 
-    private ServerSpec serverSpecific;  //server specific object
-
-    private ArrayList<String> pubServers;  //list of public servers
     private HashMap<String, ServerSpec> hashRegister;  //hashmap to a server, input: code, output: server
 
-    private boolean isPublic; //keeps track of which server wants to be public or private
-    private boolean isClient; //keeps track if the communication is with client or not
-    private String pubMessage = "request_public_servers";	
+    private String pubMessage = "request_public_servers";
     private ArrayList<String> pubCodes;
-    
+
     CentralServer(int portNum) {
 
-        hashRegister = new HashMap<>();
+        port = portNum;
 
+        hashRegister = new HashMap<>();
+        pubCodes = new ArrayList<>();
+        
         // Hardcoded, for now:
         hashRegister.put("ABCDE", new ServerSpec("Test Server 1", null, "localhost", "9090", true, true, true));
         hashRegister.put("A1BBB", new ServerSpec("Test Server 2", null, "141.219.201.62", "6060", true, true, true));
@@ -72,34 +56,45 @@ public class CentralServer implements Runnable {
     public boolean closeServer() {
         try {
             listener.close();
-            open = false;
             return true;
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            Logger.getLogger(CentralServer.class.getName()).log(Level.SEVERE, null, ex);
             return false;
         }
 
     }
 
-    //registers the server with the central server, stores a code that the client will match for access to the individual server
-    private String registerServer(Socket s, ServerSpec spec) throws IOException {
-        BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
-        String code = input.readLine();
-        hashRegister.put(code, spec);
+    private String getNewServerCode() {
+        Random rand = new Random();
+
+        int char1 = rand.nextInt(36);
+        int char2 = rand.nextInt(36);
+        int char3 = rand.nextInt(36);
+        int char4 = rand.nextInt(36);
+        int char5 = rand.nextInt(36);
+
+        char c1 = char1 < 10 ? (char) (char1 + 48) : (char) (char1 + 55);
+        char c2 = char2 < 10 ? (char) (char2 + 48) : (char) (char2 + 55);
+        char c3 = char3 < 10 ? (char) (char3 + 48) : (char) (char3 + 55);
+        char c4 = char4 < 10 ? (char) (char4 + 48) : (char) (char4 + 55);
+        char c5 = char5 < 10 ? (char) (char5 + 48) : (char) (char5 + 55);
+
+        String code = new String(new char[]{c1, c2, c3, c4, c5});
+
+        if (hashRegister.get(code) != null) {
+            return getNewServerCode();
+        }
         return code;
     }
 
     //reads the client code and connects the client with the server specified by the by shareing the server information with the client
-    private void incomingClient(Socket s) throws IOException {
-        BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
-        String code = input.readLine();
-
+    private void incomingClient(String code, Socket s) throws IOException {
         System.out.println("Read: " + code);
 
         //write back to the client
         String D = hashRegister.get(code).getName();
         String E = hashRegister.get(code).getURL();
-        String F = hashRegister.get(code).getPort(); 
+        String F = hashRegister.get(code).getPort();
 
         int A = D.length();
         int B = E.length();
@@ -111,81 +106,83 @@ public class CentralServer implements Runnable {
         output.write(outputString + "\n");
         output.flush();
     }
-    
-    private void requestPubServers(Socket s) throws IOException
-    {
-    	String outputString= "";
-    	int A;
-    	int B;
-    	int C;
-    	int D;
-    	int userReq=0;
-    	int passReq=0;
-    	int isPub=1;
-    	String E;
-    	String F;
-    	String G;
-    	String H;
-    	for(int i =0; i < pubCodes.size(); i++)
-    	{
-    		E = hashRegister.get(pubCodes.get(i)).getName();
-    		F = hashRegister.get(pubCodes.get(i)).getpURL();
+
+    private void requestPubServers(Socket s) throws IOException {
+        String outputString = "";
+        int A;
+        int B;
+        int C;
+        int D;
+        int userReq = 0;
+        int passReq = 0;
+        int isPub = 1;
+        String E;
+        String F;
+        String G;
+        String H;
+        for (int i = 0; i < pubCodes.size(); i++) {
+            E = hashRegister.get(pubCodes.get(i)).getName();
+            F = hashRegister.get(pubCodes.get(i)).getpURL();
             G = hashRegister.get(pubCodes.get(i)).getURL();
             H = hashRegister.get(pubCodes.get(i)).getPort();
-            if(hashRegister.get(pubCodes.get(i)).getReqUser())
-            	userReq=1;
-            if(hashRegister.get(pubCodes.get(i)).getReqPass())
-            	passReq=1;
+            if (hashRegister.get(pubCodes.get(i)).getReqUser()) {
+                userReq = 1;
+            }
+            if (hashRegister.get(pubCodes.get(i)).getReqPass()) {
+                passReq = 1;
+            }
             A = E.length();
             B = F.length();
             C = G.length();
             D = H.length();
-  
-    		outputString = outputString + pubCodes.size() + A + B + C + D + userReq + passReq + isPub + E + F + G + F;
-    	}
-    	
-    	BufferedWriter output = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+
+            outputString = outputString + pubCodes.size() + A + B + C + D + userReq + passReq + isPub + E + F + G + F;
+        }
+
+        BufferedWriter output = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
         output.write(outputString + "\n");
         output.flush();
     }
-    
-    
-    private void incomingServer(Socket s) throws IOException 
-    {
-        BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
-        String serverInfo = input.readLine();
-        
-        System.out.println("Read: " + serverInfo);
 
-        //processes the information the server has sent
-        int A = (int) serverInfo.charAt(0);
-        int B = (int) serverInfo.charAt(1);
-        int C = (int) serverInfo.charAt(2);
-        int D = (int) serverInfo.charAt(3);
-        boolean userReq = ((int) serverInfo.charAt(4) == 1); 
-        boolean passReq = ((int) serverInfo.charAt(5) == 1); 
-        boolean isPub = ((int) serverInfo.charAt(6) == 1);
-        String E = serverInfo.substring(7, 7+A);
-        String F = serverInfo.substring(7+A, 7+A+B);
-        String G = serverInfo.substring(7+A+B, 7+A+C);
-        String H = serverInfo.substring(7+A+B+C, 7+A+B+C+D);
-        
+    private void incomingServer(String message, Socket s) throws IOException {
+
+        String[] params = message.split(",");
+
+        int A = Integer.parseInt(params[0]);
+        int B = Integer.parseInt(params[1]);
+        int C = Integer.parseInt(params[2]);
+        int D = Integer.parseInt(params[3]);
+
+        int lengthOfPrefix = params[0].length() + params[1].length() + params[2].length()
+                + params[3].length() + 4;
+
+        boolean username = message.charAt(lengthOfPrefix) == '1';
+        boolean password = message.charAt(lengthOfPrefix + 1) == '1';
+        boolean isPublic = message.charAt(lengthOfPrefix + 2) == '1';
+
+        String E = message.substring(lengthOfPrefix + 4, lengthOfPrefix + 4 + A);
+        String F = message.substring(lengthOfPrefix + 4 + A, lengthOfPrefix + 4 + A + B);
+        String G = message.substring(lengthOfPrefix + 4 + A + B, lengthOfPrefix + 4 + A + B + C);
+        String H = message.substring(lengthOfPrefix + 4 + A + B + C, lengthOfPrefix + 4 + A + B + C + D);
+
         //stores the new specs in order to register
-        ServerSpec newServer = new ServerSpec(E, F, G, H, userReq, passReq, isPub);
-        
-        //registers and receives the code to output
-        String code = registerServer(s, newServer);
+        ServerSpec newServer = new ServerSpec(E, F, G, H, username, password, isPublic);
 
-        if(isPub)
-          pubCodes.add(code);
-        
+        //registers and receives the code to output
+        String code = getNewServerCode();
+        hashRegister.put(code, newServer);
+
+        if (isPublic) {
+            pubCodes.add(code);
+        }
+
         BufferedWriter output = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
         output.write(code + "\n");
         output.flush();
     }
-    
 
     //TO DO: implement changes to run method from server to allow central server to mediate between many different servers and clients
+    @Override
     public void run() {
         try {
             listener = new ServerSocket(port);
@@ -195,17 +192,26 @@ public class CentralServer implements Runnable {
         while (true) {
             try {
                 Socket s = listener.accept();
-                
-                BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
-                String message = input.readLine();
-                if(message.equals(pubMessage))
-                	requestPubServers(s);
-                
-                if(isClient)
-                   incomingClient(s);
-                else
-                   incomingServer(s);
-                s.close();
+
+                new Thread(() -> {
+                    try {
+                        BufferedReader input = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                        String message = input.readLine();
+                        
+                        System.out.println("Processing message: " + message);
+                        
+                        if (message.equals(pubMessage)) {
+                            requestPubServers(s);
+                        } else if (message.length() > 5) {
+                            incomingServer(message, s);
+                        } else {
+                            incomingClient(message, s);
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(CentralServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }).start();
+
             } catch (IOException ex) {
                 Logger.getLogger(CentralServer.class.getName()).log(Level.SEVERE, null, ex);
             }
