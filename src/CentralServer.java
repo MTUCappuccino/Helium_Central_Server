@@ -89,8 +89,13 @@ public class CentralServer implements Runnable {
 
     //reads the client code and connects the client with the server specified by the by shareing the server information with the client
     private void incomingClient(String code, Socket s) throws IOException {
-        System.out.println("Read: " + code);
+        BufferedWriter output = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
 
+        if (hashRegister.get(code) == null) {
+            output.write("invalid_code\n");
+            output.flush();
+        }
+        
         //write back to the client
         String D = hashRegister.get(code).getName();
         String E = hashRegister.get(code).getURL();
@@ -101,8 +106,7 @@ public class CentralServer implements Runnable {
         int C = F.length();
 
         String outputString = ("" + A) + ("," + B) + ("," + C) + "," + D + E + F;
-
-        BufferedWriter output = new BufferedWriter(new OutputStreamWriter(s.getOutputStream()));
+        
         output.write(outputString + "\n");
         output.flush();
     }
@@ -189,6 +193,9 @@ public class CentralServer implements Runnable {
         } catch (IOException ex) {
             Logger.getLogger(CentralServer.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
+        System.out.println("Central server is listening on port " + port + "...");
+        
         while (true) {
             try {
                 Socket s = listener.accept();
